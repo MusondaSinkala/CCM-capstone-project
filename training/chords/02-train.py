@@ -202,7 +202,9 @@ def construct_model(pump):
                      'chord_struct/root',
                      'chord_struct/bass']
 
-    return model, [model_inputs], model_outputs
+    hidden_model = K.models.Model(inputs=model.input, outputs=[rnn2])
+
+    return model, hidden_model, [model_inputs], model_outputs
 
 
 def train(working, max_samples, duration, rate,
@@ -256,7 +258,7 @@ def train(working, max_samples, duration, rate,
     sampler_val = val_sampler(10 * 60, pump, seed)
 
     # Build the model
-    model, inputs, outputs = construct_model(pump)
+    model, hidden_layer, inputs, outputs = construct_model(pump)
 
     # Load the training data
     idx_train_ = pd.read_json('index_train.json')

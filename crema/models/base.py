@@ -54,7 +54,13 @@ class CremaModel(object):
         ann.annotation_metadata.data_source = 'program'
         ann.duration = librosa.get_duration(y=y, sr=sr, filename=filename)
 
-        return ann
+	# Get the hidden layer output
+ 	hidden_layer_output = self.hidden_output_model.predict([self.pump.transform(audio_f=filename, y=y, sr=sr)[key] for key in self.model.input_names])
+
+        #return ann
+	return {"annotation": ann,  # The existing annotations,
+                hidden_layer_output": hidden_layer_output,  # The hidden layer data
+	    }
 
     def outputs(self, filename=None, y=None, sr=None):
         '''Return the model outputs (e.g., class likelihoods)
@@ -91,6 +97,7 @@ class CremaModel(object):
 
     def _instantiate(self, rsc):
 
+        print("check")
         # First, load the pump
         with open(resource_filename(__name__,
                                     os.path.join(rsc, 'pump.pkl')),
@@ -110,6 +117,13 @@ class CremaModel(object):
         self.model.load_weights(resource_filename(__name__,
                                                   os.path.join(rsc,
                                                                'model.h5')))
+
+	# Identify the last hidden layer
+        self.last_hidden_layer = self.model.layers[-2]  # Adjust this based on your model architecture
+	self.hidden_output_model = Model(inputs=self.model.input, outputs=self.last_hidden_layer.output)
+        f = open("demofile2.txt", "a")
+        f.write(f"{self.last_hidden_layer}")
+        f.close()
 
         # And the version number
         with open(resource_filename(__name__,
